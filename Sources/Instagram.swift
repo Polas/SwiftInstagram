@@ -67,12 +67,13 @@ public class Instagram {
     /// - parameter failure: The callback called after an incorrect login.
     public func login(from controller: UINavigationController,
                       withScopes scopes: [InstagramScope] = [.basic],
+                      redirectUrl: String?,
                       success: EmptySuccessHandler?,
                       failure: FailureHandler?) {
 
         guard client != nil else { failure?(InstagramError.missingClientIdOrRedirectURI); return }
 
-        let authURL = buildAuthURL(scopes: scopes)
+        let authURL = buildAuthURL(scopes: scopes, redirectUrl:redirectUrl)
 
         let vc = InstagramLoginViewController(authURL: authURL, success: { accessToken in
             guard self.storeAccessToken(accessToken) else {
@@ -87,12 +88,12 @@ public class Instagram {
         controller.show(vc, sender: nil)
     }
 
-    private func buildAuthURL(scopes: [InstagramScope]) -> URL {
+    private func buildAuthURL(scopes: [InstagramScope], redirectUrl: String?) -> URL {
         var components = URLComponents(string: API.authURL)!
 
         components.queryItems = [
             URLQueryItem(name: "client_id", value: client!.id),
-            URLQueryItem(name: "redirect_uri", value: client!.redirectURI),
+            URLQueryItem(name: "redirect_uri", value: redirectUrl != nil ? redirectUrl! : client!.redirectURI),
             URLQueryItem(name: "response_type", value: "token"),
             URLQueryItem(name: "scope", value: scopes.joined(separator: "+"))
         ]
